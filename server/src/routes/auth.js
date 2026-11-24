@@ -12,9 +12,9 @@ const router = Router();
 const COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 const cookieOptions = {
-  httpOnly: true, // not readable from JavaScript (protects against XSS token theft)
-  sameSite: 'lax',
-  secure: config.isProd, // https only in production
+  httpOnly: true,
+  sameSite: config.isProd ? 'none' : 'lax',
+  secure: config.isProd,
   maxAge: COOKIE_MAX_AGE_MS,
 };
 

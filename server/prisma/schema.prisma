@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id                       String    @id @default(cuid())
+  name                     String
+  defaultLowStockThreshold Int       @default(5)
+  createdAt                DateTime  @default(now())
+  users                    User[]
+  products                 Product[]
+}
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  passwordHash   String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+}
+
+model Product {
+  id                String       @id @default(cuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name              String
+  sku               String
+  description       String?
+  quantityOnHand    Int          @default(0)
+  // Float (not Decimal) so prices serialize as plain JSON numbers in the MVP.
+  costPrice         Float?
+  sellingPrice      Float?
+  lowStockThreshold Int?
+  lastUpdatedBy     String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  // SKU is unique per organization, not globally.
+  @@unique([organizationId, sku])
+  @@index([organizationId])
+}

@@ -144,6 +144,50 @@ check('delete -> 204', r.status === 204, `got ${r.status}`);
 r = await call(`/api/products/${productId}`, { cookie: cookieA });
 check('deleted product -> 404', r.status === 404);
 
+console.log('\nDashboard and settings');
+r = await call('/api/dashboard');
+check('dashboard without login -> 401', r.status === 401);
+r = await call('/api/settings');
+check('settings without login -> 401', r.status === 401);
+
+r = await call('/api/dashboard', { cookie: cookieA });
+check('empty org dashboard is zeros', r.status === 200 && r.json.totalProducts === 0 && r.json.totalUnits === 0 && r.json.lowStock.length === 0);
+
+for (const p of [
+  { name: 'Low default', sku: 'D-1', quantityOnHand: 2 },
+  { name: 'Low own threshold', sku: 'D-2', quantityOnHand: 10, lowStockThreshold: 10 },
+  { name: 'Healthy', sku: 'D-3', quantityOnHand: 11 },
+]) {
+  await call('/api/products', { method: 'POST', cookie: cookieA, body: p });
+}
+r = await call('/api/dashboard', { cookie: cookieA });
+check('total products = 3', r.json.totalProducts === 3, JSON.stringify(r.json));
+check('total units = 23', r.json.totalUnits === 23);
+check('2 low-stock items (default + own threshold, boundary included)', r.json.lowStockCount === 2 && r.json.lowStock.length === 2);
+check('low-stock sorted by quantity asc, has the 4 PRD columns',
+  r.json.lowStock[0].sku === 'D-1' && r.json.lowStock[0].lowStockThreshold === 5 && r.json.lowStock[1].lowStockThreshold === 10 && 'name' in r.json.lowStock[0] && 'quantityOnHand' in r.json.lowStock[0]);
+
+r = await call('/api/settings', { cookie: cookieA });
+check('GET settings -> default 5', r.status === 200 && r.json.defaultLowStockThreshold === 5);
+r = await call('/api/settings', { method: 'PUT', cookie: cookieA, body: { defaultLowStockThreshold: -1 } });
+check('negative threshold -> 400', r.status === 400);
+r = await call('/api/settings', { method: 'PUT', cookie: cookieA, body: { defaultLowStockThreshold: 'abc' } });
+check('non-numeric threshold -> 400', r.status === 400);
+r = await call('/api/settings', { method: 'PUT', cookie: cookieA, body: { defaultLowStockThreshold: 2.5 } });
+check('decimal threshold -> 400', r.status === 400);
+r = await call('/api/settings', { method: 'PUT', cookie: cookieA, body: { defaultLowStockThreshold: '20' } });
+check('PUT settings (string "20" accepted) -> 20', r.status === 200 && r.json.defaultLowStockThreshold === 20);
+
+r = await call('/api/dashboard', { cookie: cookieA });
+check('raising default to 20 adds the qty-11 item (now 3 low)', r.json.lowStockCount === 3);
+r = await call('/api/products', { cookie: cookieA });
+check('product list isLowStock follows the same setting', r.json.products.filter((p) => p.isLowStock).length === 3);
+
+r = await call('/api/settings', { cookie: cookieB });
+check('Org B default threshold unaffected by A change', r.json.defaultLowStockThreshold === 5);
+r = await call('/api/dashboard', { cookie: cookieB });
+check('Org B dashboard only sees its own data (1 product, 50 units)', r.json.totalProducts === 1 && r.json.totalUnits === 50 && r.json.lowStockCount === 0);
+
 r = await call('/api/auth/logout', { method: 'POST', cookie: cookieA });
 check('logout -> 200', r.status === 200);
 

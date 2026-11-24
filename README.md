@@ -33,6 +33,15 @@ npm run smoke               # end-to-end checks incl. cross-tenant attacks
 | PUT | /api/products/:id | update |
 | DELETE | /api/products/:id | hard delete |
 | POST | /api/products/:id/adjust | `{delta, note?}` |
+| GET | /api/dashboard | `{totalProducts, totalUnits, lowStockCount, lowStock[]}` |
+| GET | /api/settings | `{defaultLowStockThreshold}` |
+| PUT | /api/settings | `{defaultLowStockThreshold}` |
+
+## Demo data
+
+```bash
+npm run db:seed    # demo@stockflow.test / demo12345 (re-runnable)
+```
 
 ## Rules to keep
 

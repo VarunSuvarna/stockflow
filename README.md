@@ -48,3 +48,14 @@ npm run db:seed    # demo@stockflow.test / demo12345 (re-runnable)
 1. `orgId` comes only from the JWT (`req.user.orgId`), never from the client.
 2. Every product query includes `organizationId`.
 3. Low-stock logic lives only in `src/lib/threshold.js`.
+
+## Run the frontend
+
+```bash
+cd client
+npm install
+npm run dev                 # http://localhost:5173  (the API server must also be running)
+```
+
+Vite proxies `/api` to `localhost:3000`, so the login cookie works without CORS setup.
+Demo login after `npm run db:seed`: `demo@stockflow.test` / `demo12345`.

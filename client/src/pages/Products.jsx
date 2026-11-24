@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, messageFrom } from '../api.js';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
+import AdjustDialog from '../components/AdjustDialog.jsx';
 import { btnPrimary, cardCls, inputCls } from '../ui.js';
 
 const money = (n) => (n == null ? '—' : Number(n).toFixed(2));
@@ -21,6 +22,7 @@ export default function Products() {
   const [error, setError] = useState('');
   const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [toAdjust, setToAdjust] = useState(null);
 
   const load = useCallback(async (q) => {
     setError('');
@@ -94,6 +96,7 @@ export default function Products() {
                 <td className="px-4 py-3 text-right tabular-nums">{money(p.sellingPrice)}</td>
                 <td className="px-4 py-3 text-right">
                   <Link to={`/products/${p.id}/edit`} className="font-medium text-indigo-600 hover:underline">Edit</Link>
+                  <button onClick={() => setToAdjust(p)} className="ml-4 font-medium text-slate-600 hover:underline">Adjust</button>
                   <button onClick={() => setToDelete(p)} className="ml-4 font-medium text-red-600 hover:underline">Delete</button>
                 </td>
               </tr>
@@ -101,6 +104,14 @@ export default function Products() {
           </tbody>
         </table>
       </div>
+
+      {toAdjust && (
+        <AdjustDialog
+          product={toAdjust}
+          onClose={() => setToAdjust(null)}
+          onSaved={() => { setToAdjust(null); load(search.trim()); }}
+        />
+      )}
 
       {toDelete && (
         <ConfirmDialog

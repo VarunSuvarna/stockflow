@@ -1,3 +1,5 @@
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
+
 export class ApiError extends Error {
   constructor(message, status, fieldErrors = {}) {
     super(message);
@@ -7,7 +9,7 @@ export class ApiError extends Error {
 }
 
 export async function api(path, { method = 'GET', body } = {}) {
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${API_BASE}/api${path}`, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     credentials: 'include',

@@ -1,5 +1,6 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import { config } from './config.js'; // must be imported first: validates env vars
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
@@ -9,6 +10,8 @@ import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
 
+app.set('trust proxy', 1);
+app.use(cors({ origin: config.clientUrl, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
